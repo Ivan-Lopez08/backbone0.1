@@ -10,9 +10,10 @@ import axios from 'axios';
 
 interface OptionCardProps {
     Presupuesto: Presupuesto;
+    onUpdatePresupuestos: () => void;
 }
 
-const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
+const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto, onUpdatePresupuestos  }) => {
     const navigate = useNavigate();
     const [actividades, setActividades] = useState<Actividad[]>([]);
     const auth = useAuth();
@@ -22,12 +23,12 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
     const [showModal3, setShowModal3] = useState(false);
     const [nombreActividad, setnombreActividad] = useState('')
     const [descripcion, setDescripcion] = useState('')
-    const [costo, setCosto] = useState(0)
+    const [costo, setCosto] = useState('')
     const [nombrePresupuesto, setNombrePresupuesto] = useState('')
     const [objtivoPresupuesto, setObjtivoPresupuesto] = useState('')
     const [fechaInicio, setFechaInicio] = useState('')
     const [fechaFinal, setFechaFinal] = useState('')
-    const [monto, setMonto] = useState(0)
+    const [monto, setMonto] = useState('')
     const [selectedActivityId, setSelectedActivityId] = useState(0);
     const [showModal4, setShowModal4] = useState(false);
     const [nombreActividadEdit, setnombreActividadEdit] = useState('')
@@ -65,7 +66,7 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
 
     const openModal2 = () => {
         setNombrePresupuesto(Presupuesto.Nombre);
-        setMonto(Presupuesto.Monto_Asignado);
+        setMonto((Presupuesto.Monto_Asignado).toString());
         setObjtivoPresupuesto(Presupuesto.Objetivo);
         if (Presupuesto.Fecha_Inicio instanceof Date && Presupuesto.Fecha_Final instanceof Date) {
             setFechaInicio(Presupuesto.Fecha_Inicio.toISOString().split('T')[0]); // Convertir a cadena de texto y tomar solo la parte de la fecha
@@ -109,18 +110,22 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
     };
 
     const handleAddActivity = async () => {
-        if (costo <= 0 || monto <= 0) {
-            window.alert('El costo debe ser mayores que cero.');
+        const montoNumber = parseFloat(costo);
+        if (isNaN(montoNumber) || montoNumber <= 0) {
+            window.alert("El costo debe ser un número válido y mayor que cero.");
             return;
         }
         try {
             const response = await axios.post('http://localhost:3000/api/v1/actividades', {
                 Nombre_Actividad: nombreActividad,
                 Descripcion: descripcion,
-                Costo: costo,
+                Costo: montoNumber,
                 Presupuesto: Presupuesto.Nombre
             });
             console.log('Presupuesto creado exitosamente:', response.data);
+            setnombreActividad('');
+            setDescripcion('');
+            setCosto('');
             closeModal();
             fetchDataActivity();
         } catch (error) {
@@ -132,13 +137,13 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
     const handleEditBudget = async () => {
         try {
 
-            if (monto <= 0) {
+            if (parseFloat(monto) <= 0) {
                 window.alert('El monto debe ser mayor que cero.');
                 return;
             }
             const response = await axios.patch(`http://localhost:3000/api/v1/presupuestos/${Presupuesto.ID_Presupuesto}`, {
                 Nombre: nombrePresupuesto,
-                Monto_Asignado: monto,
+                Monto_Asignado: parseFloat(monto),
                 Objetivo: objtivoPresupuesto,
                 Fecha_Inicio: new Date(fechaInicio), // Convertir la cadena de texto a objeto de tipo Date
                 Fecha_Final: new Date(fechaFinal), // Convertir la cadena de texto a objeto de tipo Date
@@ -146,8 +151,7 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
             });
             console.log('Presupuesto editado exitosamente:', response.data);
             setShowModal2(false);
-            // Actualizar la lista de presupuestos después de la edición
-            fetchDataActivity();
+            onUpdatePresupuestos();
         } catch (error) {
             console.error('Error al editar el presupuesto:', error);
             window.alert("No se pudo editar el presupuesto")
@@ -157,7 +161,7 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
     const handleDeleteActivity = async () => {
         await axios.delete(`http://localhost:3000/api/v1/actividades/${selectedActivityId}`)
         fetchDataActivity();
-        closeModal5();
+        closeModal3();
     }
 
     const handleDeletePresupuesto = async () => {
@@ -165,17 +169,24 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
         await axios.delete(`http://localhost:3000/api/v1/presupuestos/${Presupuesto.ID_Presupuesto}`)
         fetchDataActivity();
         closeModal5();
+        onUpdatePresupuestos();
     }
 
     const handleEditActividad = async (ActividadID: number, newData: Partial<Actividad>) => {
         try {
-            const montoNumero = newData.Costo;
-            if (montoNumero) {
-                if (montoNumero <= 0 || isNaN(montoNumero)) {
-                    window.alert("Por favor ingrese un monto válido");
+            if(newData.Nombre_Actividad){
+                if (newData.Nombre_Actividad.trim() === '') {
+                    window.alert("El nombre de la actividad no puede estar vacío.");
                     return;
                 }
             }
+            const montoNumero = newData.Costo;
+            if (montoNumero) {
+                if (isNaN(montoNumero) || montoNumero <= 0) {
+                    window.alert("El monto debe ser un número válido y mayor que cero.");
+                    return;
+                }
+            }       
             if (ActividadID) {
                 const response = await axios.patch(`http://localhost:3000/api/v1/actividades/${ActividadID}`, newData);
                 fetchDataActivity();
@@ -200,7 +211,7 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
                 </div>
                 <div className='left-align'>
                     <strong className='left-align' style={{ color: restante < 0 ? 'red' : 'black' }}>
-                        Fondos restantes: {restante} Lps
+                        Fondos restantes: {(restante).toFixed(3)} Lps
                     </strong>
                 </div>
             </div>
@@ -238,7 +249,7 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
                         <h1>Crear Actividad</h1>
                         <input className="input-field" type="text" placeholder="Nombre" value={nombreActividad} onChange={e => setnombreActividad(e.target.value)} />
                         <input className="input-field" type="text" placeholder="Descripcion" value={descripcion} onChange={e => setDescripcion(e.target.value)} />
-                        <input className="input-field" type="text" placeholder="Costo" value={costo} onChange={e => setCosto(parseFloat(e.target.value))} />
+                        <input className="input-field" type="text" placeholder="Costo" value={costo} onChange={e => setCosto(e.target.value)} />
                         <button className='round-button' onClick={(e) => { e.stopPropagation(); handleAddActivity(); }}>Guardar</button>
                     </div>
                 </div>
@@ -248,9 +259,7 @@ const PresupuestoCard: React.FC<OptionCardProps> = ({ Presupuesto }) => {
                     <div className='modal-content' onClick={e => e.stopPropagation()}>
                         <h1>Editar presupuesto</h1>
                         <input className="input-field" type="text" placeholder="Nombre" value={nombrePresupuesto} onChange={e => setNombrePresupuesto(e.target.value)} />
-                        <input className="input-field" type="text" placeholder="Monto" value={monto === 0 ? '' : monto} onChange={e => {
-                            const value = parseFloat(e.target.value); setMonto(isNaN(value) || value <= 0 ? 0 : value);
-                        }} />
+                        <input className="input-field" type="text" placeholder="Monto" value={monto} onChange={e => setMonto(e.target.value)} />
                         <input className="input-field" type="text" placeholder="Objetivo" value={objtivoPresupuesto} onChange={e => setObjtivoPresupuesto(e.target.value)} />
                         {/* <input className="input-field" type="date" placeholder="Fecha Inicio" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
                         <input className="input-field" type="date" placeholder="Fecha final" value={fechaFinal} onChange={e => setFechaFinal(e.target.value)} /> */}

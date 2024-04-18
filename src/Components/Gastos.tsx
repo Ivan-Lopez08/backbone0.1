@@ -6,6 +6,7 @@ import { useAuth } from "./UserContext";
 import Menu from "./Menu";
 import bin from "../img/bin.png";
 import edit from "../img/edit.png";
+import DataTable from "react-data-table-component";
 
 
 interface Props {
@@ -174,20 +175,88 @@ export function Gastos({ setIsLogged }: Props) {
         return currentMonthGastos.reduce((total, gasto) => total + gasto.Monto, 0);
     };
 
+    type GastoRow = {
+        ID_Gasto: number;
+        Fecha_Gasto: Date;
+        Monto: number;
+        Tipo: string;
+        Descripcion: string;
+    };
+    
+    const gastoColumns = [
+        {
+            name: "#ID",
+            selector: (row: GastoRow) => row.ID_Gasto,
+            sortable: true,
+            // grow: 0.1
+        },
+        {
+            name: "Fecha",
+            selector: (row: GastoRow) => formatearFecha(row.Fecha_Gasto),
+            sortable: true,
+            // grow: 0.2
+        },
+        {
+            name: "Monto",
+            selector: (row: GastoRow) => row.Monto,
+            sortable: true,
+            // grow: 0.1
+        },
+        {
+            name: "Tipo",
+            selector: (row: GastoRow) => row.Tipo,
+            // sortable: true,
+            // grow: 0.2
+        },
+        {
+            name: "Descripción",
+            selector: (row: GastoRow) => row.Descripcion,
+            // grow: 0.3
+        },
+        {
+            name: "Opciones",
+            cell: (row: GastoRow) => (
+                <>
+                    <button title='Delete' type="button" className="btn btn-outline-danger" onClick={() => { setSelectedGastoId(row.ID_Gasto); openModal2(); }}>
+                        Eliminar
+                    </button>
+                    <button title='Edit' type="button" className="btn btn-outline-primary" onClick={() => { setSelectedGastoId(row.ID_Gasto); openModal3(row.ID_Gasto); }}>
+                        Editar
+                    </button>
+                </>
+            ),
+            // grow: 0.1
+        }
+    ];
+    
+    const processedGastos = data
+        .filter((gasto) =>
+            gasto.Descripcion.toLowerCase().includes(filtroDescripcion.toLowerCase()) &&
+            gasto.Monto.toString().toLowerCase().includes(filtroMonto.toLowerCase()) &&
+            (filtroTipo ? gasto.Tipo.toLowerCase() === filtroTipo.toLowerCase() : true)
+        )
+        .map(gasto => ({
+            ID_Gasto: gasto.ID_Gasto,
+            Fecha_Gasto: new Date(gasto.Fecha_Gasto),
+            Monto: gasto.Monto,
+            Tipo: gasto.Tipo,
+            Descripcion: gasto.Descripcion
+        }));
+
     return (
         <div className="container-fluid">
             <div className="row flex-nowrap">
                 <Menu setIsLogged={setIsLogged} />
                 <div className="col py-3">
-                    <div className="contenedorColumnas">
-                        <div className="columna1">
-                            <div className='rounded-box2'>
+                    <div className="d-flex flex-wrap gx-3 row justify-content-around">
+                        <div className="col-12 col-md-6">
+                            <div className='bg-light border rounded border-dark border-2 p-3'>
                                 <h2>Total de gastos de este mes</h2>
                                 {calculateCurrentMonthGastos()} Lps.
                             </div>
                         </div>
-                        <div className="columna2">
-                            <div className='rounded-box2'>
+                        <div className="col-12 col-md-6">
+                            <div className='bg-light border rounded border-dark border-2 p-3'>
                                 <h2>Total de gastos del mes pasado</h2>
                                 {calculateLastMonthGastos()} Lps.
                             </div>
@@ -199,44 +268,11 @@ export function Gastos({ setIsLogged }: Props) {
                             <div className="right-align">
                                 <button type="button" className="btn btn-dark" onClick={openModal}>Agregar nuevo gasto</button>
                             </div>
-                            <table className="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: '10%' }}>#ID</th>
-                                        <th style={{ width: '20%' }}>Fecha</th>
-                                        <th style={{ width: '10%' }}>Monto</th>
-                                        <th style={{ width: '20%' }}>Tipo</th>
-                                        <th style={{ width: '30%' }}>Descripción</th>
-                                        <th style={{ width: '10%' }}>Opciones</th>
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data
-                                        .filter((gasto) =>
-                                            gasto.Descripcion.toLowerCase().includes(filtroDescripcion.toLowerCase()) &&
-                                            gasto.Monto.toString().toLowerCase().includes(filtroMonto.toLowerCase()) &&
-                                            (filtroTipo ? gasto.Tipo.toLowerCase() === filtroTipo.toLowerCase() : true)
-                                        )
-                                        .map((gasto) => (
-                                            <tr key={gasto.ID_Gasto}>
-                                                <td>{gasto.ID_Gasto}</td>
-                                                <td>{formatearFecha(new Date(gasto.Fecha_Gasto))}</td>
-                                                <td>{gasto.Monto}</td>
-                                                <td>{gasto.Tipo}</td>
-                                                <td>{gasto.Descripcion}</td>
-                                                <td>
-                                                    <button title='Delete' type="button" className="btn btn-outline-danger" onClick={() => { setSelectedGastoId(gasto.ID_Gasto); openModal2() }}>
-                                                        <img className='icon-sized' src={bin} alt="Icono de eliminar" />
-                                                    </button>
-                                                    <button title='Edit' type="button" className="btn btn-outline-primary" onClick={() => { setSelectedGastoId(gasto.ID_Gasto); openModal3(gasto.ID_Gasto) }}>
-                                                        <img className='icon-sized' src={edit} alt="Icono de editar" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
+                            <DataTable
+                                    columns={gastoColumns}
+                                    data={processedGastos}
+                                    pagination
+                                />
                         </div>
                         <div className="bg-light border border-2 m-3 p-3 rounded">
                             <div className="filtros">

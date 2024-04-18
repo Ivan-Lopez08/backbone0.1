@@ -96,7 +96,7 @@ function BarChart(){
                 borderWidth: 2, 
             }],
         });
-    }, [gastosPorMes,ingresosPorMes]);
+    }, [ingresosPorMes, gastosPorMes]);
 
     return(
         <Bar data={chartData}/>

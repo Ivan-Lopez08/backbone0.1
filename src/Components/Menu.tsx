@@ -55,8 +55,7 @@ const Menu = ({ setIsLogged }: Props) => {
                                 <i className="fs-4 bi-table"></i> <span className="ms-1 d-none d-sm-inline">Plan de ahorro</span></a>
                         </li> */}
                         <li className=' align-middle px-0'>
-                            <a href="#submenu2" data-bs-toggle="collapse" className="nav-link px-0 link-menu">
-                            <span className=" d-sm-inlin ">Notificaciones</span></a>
+                            <a href="#" className="nav-link px-0 link-menu" onClick={() => navigate('/Notificaciones')}> <span className="d-none d-sm-inline">Notificaciones</span></a>
                         </li>
                         <li className=" align-middle px-0">
                             <a className="nav-link px-0 link-menu" onClick={() => navigate('/Presupuestos')}> <span className="d-none d-sm-inline">Presupuestos</span></a>
@@ -79,7 +78,7 @@ const Menu = ({ setIsLogged }: Props) => {
                     <hr />
                     <div className="dropdown pb-4">
                         <a href="#" className="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src={`https://i.pravatar.cc/150?u=${user?.Nombre}`} alt="hugenerd" width="30" height="30" className="rounded-circle" />
+                            <img src={`https://avatars.abstractapi.com/v1/?api_key=db2f543305634d799ec4f597394c4759&name=${user?.Nombre}`} alt="hugenerd" width="30" height="30" className="rounded-circle" />
                             <span className="d-none d-sm-inline mx-1">{useAuth().user?.Nombre}</span>
                         </a>
                         <ul className="dropdown-menu dropdown-menu-dark text-small shadow">

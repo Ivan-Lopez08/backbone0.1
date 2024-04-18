@@ -8,7 +8,6 @@ import InversionCard from "./Cards/InversionesCard";
 interface Props {
     setIsLogged: (value: boolean) => void;
 }
-//hola
 
 export function AdminInversiones({ setIsLogged }: Props) {
     const [inversiones, setInversiones] = useState<inversion[]>([]);

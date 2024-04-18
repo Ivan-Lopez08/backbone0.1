@@ -7,6 +7,7 @@ import { useAuth } from "./UserContext";
 import Menu from "./Menu";
 import bin from "../img/bin.png";
 import edit from "../img/edit.png";
+import DataTable from "react-data-table-component";
 
 interface Props {
     setIsLogged: (value: boolean) => void;
@@ -170,20 +171,79 @@ export function Ingresos({ setIsLogged }: Props) {
         }
     }
 
+    type IngresoRow = {
+        ID_Ingreso: number;
+        Fecha_Ingreso: Date;
+        Monto: number;
+        Descripcion: string;
+    };
+    
+    const ingresoColumns = [
+        {
+            name: "#ID",
+            selector: (row: IngresoRow) => row.ID_Ingreso,
+            sortable: true,
+            // grow: 0.1
+        },
+        {
+            name: "Fecha",
+            selector: (row: IngresoRow) => formatearFecha(row.Fecha_Ingreso),
+            sortable: true,
+            // grow: 0.2
+        },
+        {
+            name: "Monto",
+            selector: (row: IngresoRow) => `${row.Monto} Lps.`,
+            sortable: true,
+            // grow: 0.2
+        },
+        {
+            name: "Descripción",
+            selector: (row: IngresoRow) => row.Descripcion,
+            // grow: 0.4
+        },
+        {
+            name: "Opciones",
+            cell: (row: IngresoRow) => (
+                <>
+                    <button title='Delete' type="button" className="btn btn-outline-danger" onClick={() => { setSelectedIngresoId(row.ID_Ingreso); openModal2(); }}>
+                        Eliminar
+                    </button>
+                    <button title='Edit' type="button" className="btn btn-outline-primary" onClick={() => { setSelectedIngresoId(row.ID_Ingreso); openModal3(row.ID_Ingreso); }}>
+                        Editar
+                    </button>
+                </>
+            ),
+            // grow: 0.1
+        }
+    ];
+    
+    const processedIngresos = data
+        .filter((ingreso) =>
+            ingreso.Descripcion.toLowerCase().includes(filtroDescripcion.toLowerCase()) &&
+            ingreso.Monto.toString().toLowerCase().includes(filtroMonto.toLowerCase())
+        )
+        .map(ingreso => ({
+            ID_Ingreso: ingreso.ID_Ingreso,
+            Fecha_Ingreso: new Date(ingreso.Fecha_Ingreso),
+            Monto: ingreso.Monto,
+            Descripcion: ingreso.Descripcion
+        }));
+
     return (
         <div className="container-fluid">
             <div className="row flex-nowrap">
                 <Menu setIsLogged={setIsLogged} />
                 <div className="col py-3">
-                    <div className="contenedorColumnas">
-                        <div className="columna1">
-                            <div className='rounded-box2'>
+                    <div className="d-flex flex-wrap gx-3 row justify-content-around">
+                        <div className="col-12 col-md-6">
+                            <div className='bg-light border rounded border-dark border-2 p-3'>
                                 <h2>Total de ingresos de este mes</h2>
                                 {calculateCurrentMonthIncomes()} Lps.
                             </div>
                         </div>
-                        <div className="columna2">
-                            <div className='rounded-box2'>
+                        <div className="col-12 col-md-6">
+                            <div className='bg-light border rounded border-dark border-2 p-3'>
                                 <h2>Total de ingresos del mes pasado</h2>
                                 {calculateLastMonthIncomes()} Lps.
                             </div>
@@ -195,41 +255,11 @@ export function Ingresos({ setIsLogged }: Props) {
                             <div className="right-align">
                                 <button type="button" className="btn btn-dark" onClick={openModal}>Agregar nuevo ingreso</button>
                             </div>
-                            <table className="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: '10%' }}>#ID</th>
-                                        <th style={{ width: '20%' }}>Fecha</th>
-                                        <th style={{ width: '20%' }}>Monto</th>
-                                        <th style={{ width: '40%' }}>Descripción</th>
-                                        <th style={{ width: '10%' }}>Opciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data
-                                        .filter((gasto) =>
-                                            gasto.Descripcion.toLowerCase().includes(filtroDescripcion.toLowerCase()) &&
-                                            gasto.Monto.toString().toLowerCase().includes(filtroMonto.toLowerCase())
-                                        )
-                                        .map(ingreso => (
-                                            <tr key={ingreso.ID_Ingreso}>
-                                                <td>{ingreso.ID_Ingreso}</td>
-                                                <td>{formatearFecha(new Date(ingreso.Fecha_Ingreso))}</td>
-                                                <td>{ingreso.Monto} Lps.</td>
-                                                <td>{ingreso.Descripcion}</td>
-                                                <td>
-                                                    <button title='Delete' type="button" className="btn btn-outline-danger" onClick={() => { setSelectedIngresoId(ingreso.ID_Ingreso); openModal2() }}>
-                                                        <img className='icon-sized' src={bin} alt="Icono de eliminar" />
-                                                    </button>
-                                                    <button title='Edit' type="button" className="btn btn-outline-primary" onClick={() => { setSelectedIngresoId(ingreso.ID_Ingreso); openModal3(ingreso.ID_Ingreso) }}>
-                                                        <img className='icon-sized' src={edit} alt="Icono de editar" />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
-                            
+                            <DataTable
+                                    columns={ingresoColumns}
+                                    data={processedIngresos}
+                                    pagination
+                                />                           
                         </div>
                         <div className="bg-light border border-2 m-3 p-3 rounded">
                             <div className="filtros">

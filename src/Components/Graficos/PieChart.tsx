@@ -1,26 +1,24 @@
-import { ChartData } from "chart.js";
 import React, { useEffect, useState } from "react";
-import { Bar } from 'react-chartjs-2'
-import {Chart as ChartJS} from 'chart.js/auto'
-import { Gasto, Ingreso, fetchGastos, fetchIngresso, obtenerNombreMes } from "../FuncionesUtiles";
+import { Pie } from 'react-chartjs-2';
+import { Gasto, fetchGastos } from "../FuncionesUtiles";
 import { useAuth } from "../UserContext";
+import { ChartData } from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
+ChartJS.register(ArcElement, Tooltip, Legend);
 
-function BarChart(){
+function PieChart() {
     const user = useAuth().obtenerInfoUsuario();
     const [gastos, setGastos] = useState<Gasto[]>([]);
-    const [ingresos, setIngresos] = useState<Ingreso[]>([]);
-    const [gastosPorMes, setGastosPorMes] = useState<{ [mes: string]: number }>({});
-    const [ingresosPorMes, setingresosPorMes] = useState<{ [mes: string]: number }>({});
-    const [chartData, setChartData] = useState<ChartData<'bar'>>({
+    const [gastosPorTipo, setGastosPorTipo] = useState<{ [tipo: string]: number }>({});
+    const [chartData, setChartData] = useState<ChartData<'pie'>>({
         labels: [],
         datasets: [{
-            label: "Gastos por mes",
             data: [],
-        },{
-            label: "Ingresos por mes",
-            data: [],
-    }],
+            backgroundColor: [],
+            borderColor: [],
+            borderWidth: 1,
+        }],
     });
 
     useEffect(() => {
@@ -29,36 +27,18 @@ function BarChart(){
                 if (user && user.Cuenta && user.Cuenta.ID_Cuenta) {
                     const fetchedGastos = await fetchGastos(user.Cuenta.ID_Cuenta);
                     setGastos(fetchedGastos);
-                    const nuevosGastosPorMes: { [mes: string]: number } = {};
+                    const nuevosGastosPorTipo: { [tipo: string]: number } = {};
 
                     fetchedGastos.forEach(gasto => {
-                        const fecha = new Date(gasto.Fecha_Gasto);
-                        const nombreMes = obtenerNombreMes(fecha);
-                        if (!nuevosGastosPorMes[nombreMes]) {
-                            nuevosGastosPorMes[nombreMes] = 0;
+                        const tipo = gasto.Tipo;
+                        if (!nuevosGastosPorTipo[tipo]) {
+                            nuevosGastosPorTipo[tipo] = 0;
                         }
-                        nuevosGastosPorMes[nombreMes] += gasto.Monto;
-
-                        
+                        nuevosGastosPorTipo[tipo] += gasto.Monto;
                     });
 
-                    const fetchedIngresos = await fetchIngresso(user.Cuenta.ID_Cuenta);
-                    setIngresos(fetchedIngresos);
-                    const nuevosIngresosPorMes: { [mes: string]: number } = {};
-
-                    fetchedIngresos.forEach(ingreso => {
-                        const fecha = new Date(ingreso.Fecha_Ingreso);
-                        const nombreMes = obtenerNombreMes(fecha);
-                        if (!nuevosIngresosPorMes[nombreMes]) {
-                            nuevosIngresosPorMes[nombreMes] = 0;
-                        }
-                        nuevosIngresosPorMes[nombreMes] += ingreso.Monto;          
-                    });
-
-
-                    setingresosPorMes(nuevosIngresosPorMes);
-                    setGastosPorMes(nuevosGastosPorMes);
-                } 
+                    setGastosPorTipo(nuevosGastosPorTipo);
+                }
             } catch (error) {
                 console.error('Error al cargar los gastos:', error);
             }
@@ -67,11 +47,15 @@ function BarChart(){
     }, [user]);
 
     useEffect(() => {
+        const tipos = Object.keys(gastosPorTipo);
+        const montos = Object.values(gastosPorTipo);
+        const total = montos.reduce((acc, curr) => acc + curr, 0);
+        const porcentajes = montos.map(monto => (monto / total) * 100);
+
         setChartData({
-            labels: Object.keys(gastosPorMes),
+            labels: tipos,
             datasets: [{
-                label: "Gastos por mes",
-                data: Object.values(gastosPorMes),
+                data: porcentajes,
                 backgroundColor: [
                     "rgba(75,192,192,1)",
                     "#ecf0f1",
@@ -80,27 +64,14 @@ function BarChart(){
                     "2a71d0",
                 ],
                 borderColor: "black",
-                borderWidth: 2, 
-            },
-            {
-                label: "Ingresos por mes",
-                data: Object.values(ingresosPorMes),
-                backgroundColor: [
-                    "rgba(75,192,192,1)",
-                    "#ecf0f1",
-                    "#50AF95",
-                    "#f3ba2f",
-                    "2a71d0",
-                ],
-                borderColor: "black",
-                borderWidth: 2, 
+                borderWidth: 2,
             }],
         });
-    }, [gastosPorMes,ingresosPorMes]);
+    }, [gastosPorTipo]);
 
-    return(
-        <Bar data={chartData}/>
+    return (
+        <Pie data={chartData} />
     );
 }
 
-export default BarChart;
+export default PieChart;

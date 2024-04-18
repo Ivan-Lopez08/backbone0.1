@@ -27,9 +27,12 @@ body {
 }
 
 .Grafico{
-  width: 700px;
+  width: 600px;
 }
 
+.Grafico2{
+  width: 300px;
+}
 .columna1 {
   width: 50%;
   margin-right: 10px;

@@ -32,7 +32,7 @@ export default function AuthCard({ setIsLogged }: Props) {
             const isAdmin = roles.some(role => role.Role.ID_Roles === 4);
 
             if (isAdmin) {
-                navigate('/Admin');
+                navigate('/AdminHome');
             } else {
                 navigate('/');
             }
@@ -68,7 +68,7 @@ export default function AuthCard({ setIsLogged }: Props) {
         <div className="container-fluid" style={{backgroundColor: "#2E5951", height:"100vh"}}>
             <div className="d-flex justify-content-center">
                 <div className="col-md-4 col-10">
-                    <div className="shadow-sm rounded p-3" style={{backgroundColor: "white", marginTop:"200px"}}>
+                    <div className="shadow-sm rounded p-4 mx-5" style={{backgroundColor: "white", marginTop:"200px"}}>
                         <div className="row">
                             <div className="col-xl-12 col-md-12">
                                 <form onSubmit={handleSubmit} autoComplete="off">
@@ -137,10 +137,6 @@ export default function AuthCard({ setIsLogged }: Props) {
                                         <button type="submit" className="btn btn-primary">
                                             Entrar
                                         </button>
-                                    </div>
-
-                                    <div className="mt-3 mb-3 text-center">
-                                        Olvido su contraseña?
                                     </div>
 
                                     <div className="mt-3 mb-3 text-center">

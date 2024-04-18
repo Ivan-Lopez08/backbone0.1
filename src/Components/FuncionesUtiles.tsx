@@ -37,6 +37,7 @@ export interface Usuario {
   Edad: number;
   Email: string;
   password: string;
+  Telefono: string;
   fecha_Creacion: Date;
   Deleted: Date | null;
   Cuenta: {
@@ -162,6 +163,19 @@ export interface Ingreso {
   };
 }
 
+export interface Notificacion{
+  ID_Notificacion: number;
+  Descripcion: string;
+  Fecha: string;
+  Cuenta: {
+    ID_Cuenta: number;
+    Nombre: string;
+    Tipo: string;
+    Fecha_Creacion: string;
+    Deleted: null;
+};
+}
+
 export async function fetchOptions(inversionId: number): Promise<Option[]> {
   const response = await fetch(`http://localhost:3000/api/v1/opciones-inversiones?ID_Inversion=${inversionId}`);
   const data = await response.json();
@@ -194,7 +208,8 @@ export async function fetchUsersByAccountId(ID_Cuenta: number): Promise<Usuario[
 export async function fetchPresupuestos(ID_Cuenta: number): Promise<Presupuesto[]> {
   const response = await fetch(`http://localhost:3000/api/v1/presupuestos?ID_Cuenta=${ID_Cuenta}`);
   const data = await response.json();
-  return data;
+  const filteredPresupuestos = data.filter((presupuesto: Presupuesto) => presupuesto.Cuenta.ID_Cuenta === ID_Cuenta);
+  return filteredPresupuestos;
 }
 
 export async function fetchActividades(ID_Presupuesto: number): Promise<Actividad[]> {
@@ -248,5 +263,12 @@ export async function fetchIngresso(ID_Cuenta: number): Promise<Ingreso[]> {
   const data = await response.json();
   const filteredIngreso = data.filter((ingreso: Ingreso) => ingreso.Cuenta.ID_Cuenta === ID_Cuenta);
   return filteredIngreso;
+}
+
+export async function fetchNotificaciones(ID_Cuenta: number): Promise<Notificacion[]> {
+  const response = await fetch(`http://localhost:3000/api/v1/notificaciones`);
+  const data = await response.json();
+  const filteredNotificaciones = data.filter((notificacion: Notificacion) => notificacion.Cuenta.ID_Cuenta === ID_Cuenta);
+  return filteredNotificaciones;
 }
 

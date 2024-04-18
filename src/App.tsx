@@ -16,7 +16,8 @@ import { AdminInversiones } from './Components/AdminInversionesCards';
 import { AdminInversion } from './Components/Admin/AdminInversion';
 import { Perfil } from './Components/Perfil';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-
+import { Notificaciones } from './Components/Notificaciones';
+import { HomeAdmin } from './Components/HomeAdmin';
 
 
 function App() {
@@ -35,12 +36,14 @@ function App() {
                 <Route path="/Gastos" element={<Gastos setIsLogged={setIsLogged} />} />
                 <Route path="/" element={<Home setIsLogged={setIsLogged} />} />
                 <Route path="/Presupuestos" element={<Presupuestos setIsLogged={setIsLogged} />} />
+                <Route path="/AdminHome" element={<HomeAdmin setIsLogged={setIsLogged} />} />
                 <Route path="/Admin" element={<AdminCuentas setIsLogged={setIsLogged} />} />
                 <Route path="/AdminInversiones" element={<AdminInversiones setIsLogged={setIsLogged} />} />
                 <Route path="/AdminCuenta/:id" element={<AdminC setIsLogged={setIsLogged} />} />
                 <Route path="/AdminInversion/:id" element={<AdminInversion setIsLogged={setIsLogged} />} />
-                <Route path="/Inversion/:id" element={<Inversion setIsLogged={setIsLogged} />} />\
-                <Route path="/Perfil" element={<Perfil setIsLogged={setIsLogged} />} />\
+                <Route path="/Inversion/:id" element={<Inversion setIsLogged={setIsLogged} />} />
+                <Route path="/Perfil" element={<Perfil setIsLogged={setIsLogged} />} />
+                <Route path="/Notificaciones" element={<Notificaciones setIsLogged={setIsLogged} />} />
               </>
             ) : (
               <Route path="/" element={<AuthCard setIsLogged={setIsLogged} />} />

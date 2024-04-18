@@ -302,7 +302,7 @@ export function AdminInversion({ setIsLogged }: Props) {
                                 <button type="button" className="btn btn-dark" onClick={openModal6}>Agregar otra opción</button>
                             </div>
                         </div>
-                        <div className="columnaFiltro">
+                        <div className="bg-light border border-2 m-3 p-3 rounded">
                             <div>
                                 <h2>Filtrar Opciones</h2>
                                 <h4 className="left-align">Nombre</h4>

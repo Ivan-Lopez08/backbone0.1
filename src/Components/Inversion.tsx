@@ -49,7 +49,7 @@ export function Inversion({ setIsLogged }: Props) {
             <div className="row flex-nowrap">
                 <Menu setIsLogged={setIsLogged}/>
                 <div className="col py-3">
-                    <h1>Inversión en {inversion?.Nombre}</h1>
+                    <h1 className="left-align">Inversión en {inversion?.Nombre}</h1>
                     <div className="video-container">
                         <iframe
                             src={videoUrl}
@@ -58,8 +58,11 @@ export function Inversion({ setIsLogged }: Props) {
                             allowFullScreen
                         ></iframe>
                     </div>
-                    <div>
-                        <p className="font-weight-normal">{inversion?.Descripcion}</p>
+                    <div className="left-align">
+                        <div>
+                            <h4><strong>Aqui tienes una breve descripcion de este metodo de inversion: </strong></h4>
+                            <p className="font-weight-normal">{inversion?.Descripcion}</p>
+                        </div>                       
                     </div>
                     <h4 className="left-align">Lugares donde puedes invertir:</h4>
                     <div className="row">

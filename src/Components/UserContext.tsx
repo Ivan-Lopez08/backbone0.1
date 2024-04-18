@@ -6,6 +6,7 @@ interface Usuario {
   Edad: number
   Email: string
   password: string
+  Telefono: string
   fecha_Creacion: string
   Cuenta: {
     ID_Cuenta: number;

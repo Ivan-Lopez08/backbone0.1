@@ -14,6 +14,7 @@ export default function RegisterCard() {
         password: '',
         password2: '',
         nombre: '',
+        Telefono: '',
         nombreEmpresa: '',
     })
 
@@ -21,44 +22,50 @@ export default function RegisterCard() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-    
+
         if (!selectedOption) {
             window.alert("Por favor seleccione un tipo de cuenta");
             return;
         }
 
-        for (const key in inputValues) {
-            if (!inputValues[key as keyof typeof inputValues]) {
-                window.alert(`El campo ${key} no puede estar vacío`);
+        if (selectedOption === 'Personal') {
+            if (!inputValues.nombre || !inputValues.email || !inputValues.Telefono || !inputValues.password || !inputValues.password2) {
+                window.alert('Por favor complete todos los campos');
+                return;
+            }
+        } else {
+            if (!inputValues.nombreEmpresa || !inputValues.nombre || !inputValues.email || !inputValues.Telefono || !inputValues.password || !inputValues.password2) {
+                window.alert('Por favor complete todos los campos');
                 return;
             }
         }
-    
+
         try {
             // Verificar si el correo electrónico ya está en uso
             const response = await axios.get('http://localhost:3000/api/v1/usuarios');
             const existingUser = response.data.find((user: any) => user.Email === inputValues.email);
-            
+
             if (existingUser) {
                 window.alert('El correo electrónico ya está en uso');
                 return;
             }
-    
+
             // Crear la cuenta
             const cuentaResponse = await axios.post('http://localhost:3000/api/v1/cuentas', {
                 Nombre: selectedOption === 'Personal' ? inputValues.nombre : inputValues.nombreEmpresa,
                 Tipo: selectedOption
             });
-    
+
             // Crear el usuario
             const usuarioResponse = await axios.post('http://localhost:3000/api/v1/usuarios', {
                 Nombre: inputValues.nombre,
                 Edad: 18,
                 Email: inputValues.email,
                 password: inputValues.password,
+                Telefono: inputValues.Telefono,
                 Cuenta: cuentaResponse.data.Nombre
             });
-    
+
             // Redirigir al usuario a la página de inicio
             navigate('/');
         } catch (error) {
@@ -79,10 +86,10 @@ export default function RegisterCard() {
     };
 
     return (
-        <div className="container mt-4rem mycontainer">
+        <div className="container-fluid" style={{ backgroundColor: "#2E5951", height: "100vh" }}>
             <div className="d-flex justify-content-center">
                 <div className="col-md-4 col-10">
-                    <div className="shadow-sm rounded p-3">
+                    <div className="shadow-sm rounded p-4 mx-5" style={{ backgroundColor: "white", marginTop: "200px" }}>
                         <div className="row">
                             <div className="col-xl-12 col-md-12">
                                 <form onSubmit={handleSubmit} autoComplete="off">
@@ -113,12 +120,13 @@ export default function RegisterCard() {
                                         <div>
                                             <div className="mb-2 p-1 d-flex border rounded">
                                                 <div className="rounded-circle">
-                                                    <img
+                                                    {/* <i className="bi bi-person"></i> */}
+                                                    {/* <img
                                                         className="img-fluid"
                                                         src={accountIcon}
                                                         width="30"
                                                         height="30"
-                                                        alt="iconUser" />
+                                                        alt="iconUser" /> */}
                                                 </div>
                                                 <input
                                                     autoFocus
@@ -132,12 +140,13 @@ export default function RegisterCard() {
                                             </div>
                                             <div className="mb-2 p-1 d-flex border rounded">
                                                 <div className="rounded-circle">
-                                                    <img
+                                                    {/* <i className="bi bi-person"></i> */}
+                                                    {/* <img
                                                         className="img-fluid"
                                                         src={accountIcon}
                                                         width="30"
                                                         height="30"
-                                                        alt="iconUser" />
+                                                        alt="iconUser" /> */}
                                                 </div>
                                                 <input
                                                     autoFocus
@@ -156,12 +165,13 @@ export default function RegisterCard() {
                                         <div>
                                             <div className="mb-2 p-1 d-flex border rounded">
                                                 <div className="rounded-circle">
-                                                    <img
+                                                    {/* <i className="bi bi-person"></i> */}
+                                                    {/* <img
                                                         className="img-fluid"
                                                         src={accountIcon}
                                                         width="30"
                                                         height="30"
-                                                        alt="iconUser" />
+                                                        alt="iconUser" /> */}
                                                 </div>
                                                 <input
                                                     autoFocus
@@ -175,12 +185,13 @@ export default function RegisterCard() {
                                             </div>
                                             <div className="mb-2 p-1 d-flex border rounded">
                                                 <div className="rounded-circle">
-                                                    <img
+                                                    {/* <i className="bi bi-person"></i> */}
+                                                    {/* <img
                                                         className="img-fluid"
                                                         src={accountIcon}
                                                         width="30"
                                                         height="30"
-                                                        alt="iconUser" />
+                                                        alt="iconUser" /> */}
                                                 </div>
                                                 <input
                                                     autoFocus
@@ -194,12 +205,13 @@ export default function RegisterCard() {
                                             </div>
                                             <div className="mb-2 p-1 d-flex border rounded">
                                                 <div className="rounded-circle">
-                                                    <img
+                                                    {/* <i className="bi bi-envelope-paper"></i> */}
+                                                    {/* <img
                                                         className="img-fluid"
                                                         src={accountIcon}
                                                         width="30"
                                                         height="30"
-                                                        alt="iconUser" />
+                                                        alt="iconUser" /> */}
                                                 </div>
                                                 <input
                                                     autoFocus
@@ -216,12 +228,32 @@ export default function RegisterCard() {
 
                                     <div className="mb-2 p-1 d-flex border rounded">
                                         <div className="rounded-circle">
-                                            <img
+                                            {/* <i className="bi bi-telephone img-fluid" style={{ width: "30", height: "30" }}></i> */}
+                                            {/* <img
                                                 className="img-fluid"
                                                 src={passwordIcon}
                                                 width="30"
                                                 height="30"
-                                                alt="iconPass" />
+                                                alt="iconPass" /> */}
+                                        </div>
+                                        <input
+                                            autoFocus
+                                            className="form-control txt-input"
+                                            onChange={handleChange}
+                                            value={inputValues.Telefono}
+                                            name="Telefono"
+                                            type="text"
+                                            placeholder="Numero de telefono"
+                                        />
+                                    </div>
+                                    <div className="mb-2 p-1 d-flex border rounded">
+                                        <div className="rounded-circle">
+                                            {/* <img
+                                                className="img-fluid"
+                                                src={passwordIcon}
+                                                width="30"
+                                                height="30"
+                                                alt="iconPass" /> */}
                                         </div>
                                         <input
                                             className="form-control txt-input"
@@ -234,12 +266,12 @@ export default function RegisterCard() {
                                     </div>
                                     <div className="mb-2 p-1 d-flex border rounded">
                                         <div className="rounded-circle">
-                                            <img
+                                            {/* <img
                                                 className="img-fluid"
                                                 src={passwordIcon}
                                                 width="30"
                                                 height="30"
-                                                alt="iconPass" />
+                                                alt="iconPass" /> */}
                                         </div>
                                         <input
                                             className="form-control txt-input"

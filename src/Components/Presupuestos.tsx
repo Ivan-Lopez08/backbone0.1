@@ -20,8 +20,8 @@ export function Presupuestos({ setIsLogged }: Props) {
     const [objetivo, setObjetivo] = useState('')
 
     const fetchData = async () => {
-        if (auth.user && auth.user.ID_Usuario) {
-            fetchPresupuestos(auth.user.ID_Usuario).then((data) => setPresupuestos(data));
+        if (auth.user) {
+            fetchPresupuestos(auth.user.Cuenta.ID_Cuenta).then((data) => setPresupuestos(data));
         }
     };
 
@@ -51,7 +51,17 @@ export function Presupuestos({ setIsLogged }: Props) {
         setShowModal(false);
     };
 
-    const  handleAddBudget = async () => {
+    const handleAddBudget = async () => {
+        if (nombrePresupuesto.trim() === '') {
+            window.alert("El nombre del presupuesto no puede estar vacío.");
+            return;
+        }
+        
+        const montoNumber = parseFloat(monto);
+        if (isNaN(montoNumber) || montoNumber <= 0) {
+            window.alert("El monto debe ser un número válido y mayor que cero.");
+            return;
+        }
         try {
             console.log(monto, nombrePresupuesto, fechaInicio, fechaFinal, auth.user?.Cuenta.Nombre)
             const response = await axios.post('http://localhost:3000/api/v1/presupuestos', {
@@ -74,18 +84,26 @@ export function Presupuestos({ setIsLogged }: Props) {
         }
     }
 
+    const handleUpdatePresupuestos = () => {
+        fetchData();
+    };
+
     return (
         <div className="container-fluid">
             <div className="row flex-nowrap">
                 <Menu setIsLogged={setIsLogged} />
                 <div className="col py-3">
                     <h1 className="left-align">Mis presupuestos</h1>
+
                     <div className="d-flex justify-content-start mb-3">
                         <button type="button" className="btn btn-dark" onClick={openModal}>Nuevo presupuesto</button>
                     </div>
+                    {presupuestos.length === 0 && (
+                        <h4>Aun no ha creado ningún presupuesto</h4>
+                    )}
                     <div className="row">
                         {presupuestos.map((presupuesto) => (
-                            <PresupuestoCard key={presupuesto.ID_Presupuesto} Presupuesto={presupuesto} />
+                            <PresupuestoCard key={presupuesto.ID_Presupuesto} Presupuesto={presupuesto} onUpdatePresupuestos={handleUpdatePresupuestos} />
                         ))}
                     </div>
                     {showModal && (
@@ -95,8 +113,6 @@ export function Presupuestos({ setIsLogged }: Props) {
                                 <input className="input-field" type="text" placeholder="Nombre" value={nombrePresupuesto} onChange={e => setNombrePresupuesto(e.target.value)} />
                                 <input className="input-field" type="text" placeholder="Monto" value={monto} onChange={e => setMonto(e.target.value)} />
                                 <input className="input-field" type="text" placeholder="Objetivo" value={objetivo} onChange={e => setObjetivo(e.target.value)} />
-                                {/* <input className="input-field" type="date" placeholder="FechaInicio" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} />
-                                <input className="input-field" type="date" placeholder="FechaFinal" value={fechaFinal} onChange={e => setFechaFinal(e.target.value)} /> */}
                                 <button className='round-button' onClick={(e) => { e.stopPropagation(); handleAddBudget(); }}>Guardar</button>
                             </div>
                         </div>

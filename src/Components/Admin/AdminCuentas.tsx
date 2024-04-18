@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Account, fetchAccount, fetchUsersByAccountId, Usuario, Role } from "../FuncionesUtiles";
+import { Account, fetchAccount, fetchUsersByAccountId, Usuario, Role, fetchrolesByUsuarioID, RolXUsuario } from "../FuncionesUtiles";
 import MenuAdmin from "../MenuAdmin";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import DataTable from "react-data-table-component";
 
 interface Props {
     setIsLogged: (value: boolean) => void;
@@ -28,7 +29,15 @@ export function AdminC({ setIsLogged }: Props) {
     const [accountId, setAccountId] = useState<number | null>(null);
     const [roles, setRoles] = useState<Role[]>([]);
     const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
-    const [userRoles, setUserRoles] = useState<number[]>([]);
+    const [userRoles, setUserRoles] = useState<RolXUsuario[]>([]);
+    const [showModal4, setShowModal4] = useState(false);
+    const [showModal5, setShowModal5] = useState(false);
+    const [inputUsuario, setInputUsuario] = useState({
+        Nombre: '',
+        Email: '',
+        Password: 'backBone2024',
+        Telefono: '',
+    })
 
     useEffect(() => {
         if (id !== undefined) {
@@ -56,15 +65,18 @@ export function AdminC({ setIsLogged }: Props) {
 
     const fetchUserRoles = async (userID: number) => {
         try {
-            const response = await axios.get(`http://localhost:3000/api/v1/rolesXUsuarios?userID=${userID}`);
-            const rolesData = response.data;
-            // Obtener los IDs de los roles asociados al usuario
-            const userRoleIDs = rolesData.map((roleData: any) => roleData.ID_Role);
-            setUserRoles(userRoleIDs);
+            setUserRoles(await fetchrolesByUsuarioID(userID));
         } catch (error) {
             console.error("Error al obtener los roles del usuario:", error);
         }
     };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputUsuario({
+            ...inputUsuario,
+            [e.target.name]: e.target.value
+        })
+    }
 
     useEffect(() => {
         if (SelectedUserID !== 0) {
@@ -94,12 +106,35 @@ export function AdminC({ setIsLogged }: Props) {
         setShowModal2(false);
     };
 
-    const openModal3 = () => {
+    const openModal3 = async () => {
+        // if (userRoles.includes(1)) {
+        //     // Si el usuario es Administrador, seleccionar el botón de radio de Administrador
+        //     document.getElementById("btnradio1")?.click();
+        // } else {
+        //     // Si el usuario no es Administrador, seleccionar el botón de radio de Usuario
+        //     document.getElementById("btnradio2")?.click();
+        // }
         setShowModal3(true);
     };
 
     const closeModal3 = () => {
         setShowModal3(false);
+    };
+
+    const openModal4 = () => {
+        setShowModal4(true);
+    };
+
+    const closeModal4 = () => {
+        setShowModal4(false);
+    };
+
+    const openModal5 = () => {
+        setShowModal5(true);
+    };
+
+    const closeModal5 = () => {
+        setShowModal5(false);
     };
 
     const handleEditName = async () => {
@@ -181,6 +216,92 @@ export function AdminC({ setIsLogged }: Props) {
     };
 
 
+    type UsuarioRow = {
+        ID_Usuario: number;
+        Nombre: string;
+        Email: string;
+    };
+
+    const usuarioColumns = [
+        {
+            name: "ID",
+            selector: (row: UsuarioRow) => row.ID_Usuario,
+            sortable: true
+        },
+        {
+            name: "Nombre",
+            selector: (row: UsuarioRow) => row.Nombre,
+            sortable: true
+        },
+        {
+            name: "Correo electronico",
+            selector: (row: UsuarioRow) => row.Email,
+            sortable: true
+        },
+        {
+            name: "Opciones",
+            cell: (row: UsuarioRow) => (
+                <>
+                    <button type="button" className="btn btn-primary" onClick={openModal3}>Roles</button>
+                    <button type="button" className="btn btn-warning" onClick={() => openModal2(row.ID_Usuario)}>Editar</button>
+                    <button type="button" className="btn btn-danger" onClick={() => { setSelectedUserID(row.ID_Usuario); openModal5(); }}>Eliminar</button>
+                </>
+            )
+        }
+    ];
+
+    const processedUsuarios = users
+        .filter((usuario) =>
+            usuario.Nombre.toLowerCase().includes(filtroNombreUser.toLowerCase()) &&
+            usuario.Email.toLowerCase().includes(filtroEmail.toLowerCase())
+        )
+        .map(usuario => ({
+            ID_Usuario: usuario.ID_Usuario,
+            Nombre: usuario.Nombre,
+            Email: usuario.Email
+        }));
+
+
+    const handleAddUsuario = async () => {
+        const usuarioResponse = await axios.post('http://localhost:3000/api/v1/usuarios', {
+            Nombre: inputUsuario.Nombre,
+            Edad: 18,
+            Email: inputUsuario.Email,
+            password: inputUsuario.Password,
+            Telefono: inputUsuario.Telefono,
+            Cuenta: account?.Nombre
+        });
+
+        const nuevoUsuarioId = usuarioResponse.data.ID_Usuario;
+        const correoInvitacion = await axios.post(`http://localhost:3000/api/v1/usuarios/${nuevoUsuarioId}/send-email`)
+
+        const nuevoUsuario = usuarioResponse.data.Nombre;
+        const agregarRole = await axios.post('http://localhost:3000/api/v1/rolesXUsuarios', {
+            Usuario: nuevoUsuario,
+            Role: "Usuario"
+        });
+
+        const crearNotificacion = await axios.post(`http://localhost:3000/api/v1/notificaciones`, {
+            Descripcion: `Se le ha enviado el correo de invitacion a ${inputUsuario.Nombre}`,
+            Estado: 'Visto',
+            Cuenta: account?.Nombre
+        });
+        closeModal4()
+        if (account) {
+            fetchUsersByAccountId(account?.ID_Cuenta).then((userData) => setUsers(userData));
+        }
+
+    }
+
+    const handleDeleteUsuario = async () => {
+        await axios.delete(`http://localhost:3000/api/v1/usuarios/${SelectedUserID}`)
+        if (accountId) {
+            const updatedUsers = await fetchUsersByAccountId(accountId);
+            setUsers(updatedUsers);
+        }
+        closeModal5();
+    }
+
     return (
         <div className="container-fluid">
             <div className="row flex-nowrap">
@@ -188,59 +309,51 @@ export function AdminC({ setIsLogged }: Props) {
                 <div className="col py-3">
                     <h1>Administrar cuenta: {account?.Nombre}</h1>
                     <div className="left-align">
+                        <div className="left-align">
+                            <strong >Informacion de la cuenta:</strong>
+                        </div>
                         Nombre de la cuenta: {account?.Nombre}
                         <button type="button" className="btn btn-info" style={{ marginLeft: '10px' }} onClick={openModal}>Editar</button>
                     </div>
-                    <div>
-                        <table style={{ width: '70%', marginTop: '20px' }} className="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>Opciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users
-                                    .filter((users) =>
-                                        users.Nombre.toLowerCase().includes(filtroNombreUser.toLowerCase()) &&
-                                        users.Email.toLowerCase().includes(filtroEmail.toLowerCase())
-                                    )
-                                    .map((users) => (
-                                        <tr key={users.ID_Usuario}>
-                                            <td>{users.ID_Usuario}</td>
-                                            <td>{users.Nombre}</td>
-                                            <td>{users.Email}</td>
-                                            <td>
-                                                <button type="button" className="btn btn-primary" onClick={openModal3}>Roles</button>
-                                                <button type="button" className="btn btn-warning" onClick={() => openModal2(users.ID_Usuario)}>Editar</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                            </tbody>
-                        </table>
-                        <div className="filtros" style={{ width: '25%', marginLeft: '75%', marginTop: '-200px', backgroundColor: 'lightgrey', borderRadius: '10px', padding: '10px' }}>
-                            <div>
-                                <h2>Filtrar usuarios</h2>
-                                <h4 className="left-align">Nombre</h4>
-                                <input className="input-field2"
-                                    type="text"
-                                    placeholder="Ingrese la descripción"
-                                    value={filtroNombreUser}
-                                    onChange={(e) => setFiltroNombreUser(e.target.value)}
-                                />
+                    <div className="contenedorColumnas">
+                        <div className="columnaTabla">
+                            <div className="left-align">
+                                <strong >Usuarios de la Cuenta:</strong>
                             </div>
-                            <div>
-                                <h4 className="left-align">Email</h4>
-                                <input className="input-field2"
-                                    type="text"
-                                    placeholder="Ingrese el monto"
-                                    value={filtroEmail}
-                                    onChange={(e) => setFiltroEmail(e.target.value)}
-                                />
+                            <DataTable
+                                columns={usuarioColumns}
+                                data={processedUsuarios}
+                                pagination
+                            />
+                            <div className="left-align">
+                                <button type="button" className="btn btn-dark" onClick={openModal4}>Agregar otro usuario</button>
                             </div>
                         </div>
+                        <div className="bg-light border border-2 m-3 p-3 rounded">
+                            <div className="filtros">
+                                <div>
+                                    <h2>Filtrar usuarios</h2>
+                                    <h4 className="left-align">Nombre</h4>
+                                    <input className="input-field2"
+                                        type="text"
+                                        placeholder="Ingrese la descripción"
+                                        value={filtroNombreUser}
+                                        onChange={(e) => setFiltroNombreUser(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <h4 className="left-align">Correo electronico</h4>
+                                    <input className="input-field2"
+                                        type="text"
+                                        placeholder="Ingrese el correo electronico"
+                                        value={filtroEmail}
+                                        onChange={(e) => setFiltroEmail(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
                         {showModal && (
                             <div className='modal' onClick={closeModal}>
                                 <div className='modal-content' onClick={e => e.stopPropagation()}>
@@ -261,23 +374,41 @@ export function AdminC({ setIsLogged }: Props) {
                                 </div>
                             </div>
                         )}
-
                         {showModal3 && (
                             <div className='modal' onClick={closeModal3}>
                                 <div className='modal-content' onClick={e => e.stopPropagation()}>
                                     <h1>Roles de Usuario</h1>
-                                    {roles.map(role => (
-                                        <div key={role.ID_Roles}>
-                                            <input
-                                                type="checkbox"
-                                                id={role.ID_Roles.toString()}
-                                                checked={userRoles.includes(role.ID_Roles)}
-                                                onChange={() => handleRoleSelection(role.ID_Roles)}
-                                            />
-                                            <label htmlFor={role.ID_Roles.toString()}>{role.Rol}</label>
-                                        </div>
-                                    ))}
-                                    <button onClick={handleSaveRoles}>Guardar</button>
+                                    <div className="btn-group" role="group" aria-label="Basic radio toggle button group">
+                                        <input type="radio" className="btn-check" name="btnradio" id="btnradio1" autoComplete="off" defaultChecked />
+                                        <label className="btn btn-outline-primary" htmlFor="btnradio1">Administrador</label>
+                                        <input type="radio" className="btn-check" name="btnradio" id="btnradio2" autoComplete="off" />
+                                        <label className="btn btn-outline-primary" htmlFor="btnradio2">Usuario</label>
+                                    </div>
+                                    <button className='round-button' onClick={handleSaveRoles}>Guardar</button>
+                                </div>
+                            </div>
+                        )}
+                        {showModal4 && (
+                            <div className='modal' onClick={closeModal4}>
+                                <div className='modal-content' onClick={e => e.stopPropagation()}>
+                                    <h1>Invitar nuevo usuario</h1>
+                                    <input className="input-field" name="Nombre" type="text" placeholder="Nombre" value={inputUsuario.Nombre} onChange={handleChange} />
+                                    <input className="input-field" name="Email" type="text" placeholder="Correo" value={inputUsuario.Email} onChange={handleChange} />
+                                    <input className="input-field" name="Telefono" type="text" placeholder="Numero de telefono" value={inputUsuario.Telefono} onChange={handleChange} />
+                                    <div>
+                                        <button className='round-button' onClick={(e) => { e.stopPropagation(); handleAddUsuario(); }}>Invitar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {showModal5 && (
+                            <div className='modal' onClick={closeModal5}>
+                                <div className='modal-content' onClick={e => e.stopPropagation()}>
+                                    <h1>Seguro que desea eliminar este registro?</h1>
+                                    <div>
+                                        <button className='round-button' onClick={(e) => { e.stopPropagation(); handleDeleteUsuario(); }}>Eliminar</button>
+                                        <button className='round-button' onClick={(e) => { e.stopPropagation(); closeModal5() }}>No Eliminar</button>
+                                    </div>
                                 </div>
                             </div>
                         )}
